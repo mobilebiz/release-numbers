@@ -40,14 +40,11 @@ client.api.v2010.accounts.list()
       try {
         if (account.status === 'active') await execSubAccount(account);
         if (account.status === 'suspended') {
-          // サスペンデッドの場合はサブアカウントを削除する
-          if (DELETE) {
-            await client.api.v2010.accounts(account.sid).update({ status: 'closed' });
-            log(`delete: ${account.friendlyName}`, 'yellow');
-          }
-          // await execSubAccount(account);
-          // // サスペンドに戻す
-          // await client.api.v2010.accounts(account.sid).update({ status: 'suspended' });
+          // サスペンデッドの場合はサブアカウントを一時的にアクティブにする
+          await client.api.v2010.accounts(account.sid).update({ status: 'active' });
+          await execSubAccount(account);
+          // サスペンドに戻す
+          await client.api.v2010.accounts(account.sid).update({ status: 'suspended' });
         };        
       } catch (error) {
         log(`${error}`, 'red')
@@ -55,9 +52,6 @@ client.api.v2010.accounts.list()
         continue;
       }
     }
-  // })
-  // .catch(err => {
-  //   log(`*** ERROR ***\n${err}`, 'red')
   });
   
   // サブアカウントごとに処理を実行する
